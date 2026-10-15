@@ -1,0 +1,8 @@
+{
+  "deepseek_api_key": "sk-your-deepseek-api-key",
+  "cursor_session_token": "your-workos-cursor-session-token",
+  "openai_api_key": "sk-your-openai-api-key",
+  "siliconflow_api_key": "sk-your-siliconflow-api-key",
+  "xiaozhi_server_url": "ws://127.0.0.1:8080/ws",
+  "cache_ttl_seconds": 300
+}

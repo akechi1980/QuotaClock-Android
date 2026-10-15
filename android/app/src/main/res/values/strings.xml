@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">AI Desk</string>
+    <string name="status_idle">待命</string>
+    <string name="status_listening">监听</string>
+    <string name="status_thinking">思考</string>
+    <string name="status_responding">回答</string>
+    <string name="not_connected">尚未连接</string>
+    <string name="demo_mode_tag">DEMO 演示模式</string>
+    <string name="unknown">未知</string>
+    <string name="default_server_url">http://192.168.0.100:8766/api/progress</string>
+</resources>

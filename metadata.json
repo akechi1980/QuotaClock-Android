@@ -1,0 +1,6 @@
+{
+  "name": "AI Desk — Android 桌面信息控制台",
+  "description": "给 Amazon Fire HD 8（2020，KFONWI，Fire OS 7 / Android 9 API 28）用的桌面信息控制台。网页端含时钟、Open-Meteo 天气、AI 配额和小智状态；电脑端 Python 伴侣服务负责拉配额。原生 APK 仍是骨架。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

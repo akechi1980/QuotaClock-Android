@@ -1,0 +1,73 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.aidesk.dashboard'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.aidesk.dashboard"
+        // Target hardware: Amazon Fire HD 8 (2017) / Fire OS 5.7.1.0 (Android 5.1.1 API 22)
+        minSdk 22
+        targetSdk 33
+        versionCode 1
+        versionName "1.0.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            applicationIdSuffix ".debug"
+            debuggable true
+        }
+    }
+
+    compileOptions {
+        coreLibraryDesugaringEnabled true
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+dependencies {
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.2.2'
+
+    // AndroidX dependencies strictly compatible with API 22
+    // (Note: core-ktx 1.12+ and appcompat 1.7+ require API 23+, so 1.9.0 and 1.5.1 are used)
+    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'com.google.android.material:material:1.8.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.cardview:cardview:1.0.0'
+
+    // Kotlin Coroutines for non-blocking timers and HTTP requests
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
+
+    // OkHttp 3.12.x is the dedicated Long-Term-Support branch for Android 5.0+ (API 21/22)
+    // with reliable TLS 1.2 support without memory leaks on low-end 1.5GB RAM tablets
+    implementation 'com.squareup.okhttp3:okhttp:3.12.13'
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.12.13'
+
+    // Lightweight JSON serialization
+    implementation 'com.google.code.gson:gson:2.10.1'
+
+    // 纯 Java Opus，对齐官方 16 kHz 上行 / 24 kHz 下行、60 ms 帧。API 28 没有系统 Opus 解码器。
+    implementation 'io.github.jaredmdobson:concentus:1.0.2'
+}

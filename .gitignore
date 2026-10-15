@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+
+# frontend build
+dist/
+server.js
+
+# secrets
+.env
+.env.*
+!.env.example
+server/config.json
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+*.apk
+*.aab
+*.keystore
+*.jks
+captures/
+.externalNativeBuild/
+.cxx/
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
