@@ -1,50 +1,108 @@
-# AI Desk — Fire HD 桌面信息控制台
+![横屏桌面：七段时钟、天气、三行额度和小智待命](docs/images/desk.png)
 
-给 Amazon Fire HD 做常亮桌面：上半屏是时钟、天气和 AI 配额，下半屏是小智对话状态。密钥留在电脑上，平板只负责显示。
+# AI Desk
 
-当前对着的真机是 **Fire HD 8（2020，第 10 代，代号 KFONWI）**，不是文档旧稿里的 2017 款。
+**时间留在桌上，额度看一眼就够。**
 
-## 当前设备与本机环境
+一块 1280×800 的横屏，上半边是时钟、天气和 AI 配额，下半边是小智对话。密钥留在电脑上，平板只接收百分比和天气。
 
-| 项 | 实际情况 |
-|---|---|
-| 平板 | KFONWI |
-| 系统 | Fire OS 7 / Android 9 / API 28 |
-| 屏幕 | 1280×800，16:10 横屏，USB-C |
-| USB | 已插入，但只暴露 MTP。`adb devices` 为空，还不能安装应用 |
-| 开发机 | Linux。Android Studio 2025.3.2 在 `~/android-studio`，自带 JDK 21 |
-| SDK | `~/Android/Sdk`。已有平台 34、35、36、36.1，Build-Tools、NDK、模拟器 |
-| 命令行 | 系统没有 `java` / `javac`。`PATH` 里的 `adb` 是 Debian 旧版 28.0.2；SDK 里的是 37.0.0 |
-| 环境变量 | `ANDROID_HOME`、`JAVA_HOME` 都未设置 |
+`Fire HD 8` · `1280×800` · `横屏常亮` · `Python 标准库`
 
-代码里的 `minSdk` 仍是 22，这是为了兼容 2017 款（KFDOWI，Fire OS 5 / API 22）。这台 2020 款是 API 28，那个版本的 TLS 1.2 补丁用不上，装包本身没有障碍。
+[界面一览](#界面一览) ·
+[数据怎么来到屏幕上](#数据怎么来到屏幕上) ·
+[快速开始](#快速开始) ·
+[目录](#目录)
 
-## 工程里实际有什么
+> 配图使用演示数据。额度、天气和对话都是界面示例，不含真实账号、密钥或设备身份。进度接口与 [余刻 QuotaClock](https://github.com/akechi1980/QuotaClock) 相同。
 
-| 部分 | 作用 | 现状 |
-|---|---|---|
-| `src/` | React + Vite 控制台 | 可以在浏览器里跑。时钟、天气、配额、小智面板都有界面 |
-| `server/windows_agent_server.py` | Python 3 标准库伴侣服务，默认端口 8000 | 可以在这台 Linux 上直接跑。没配 `config.json` 时返回演示配额 |
-| `android/` | 原生 APK，`com.aidesk.dashboard` | 骨架。布局在，网络请求在，界面刷新函数是空的，现在编出来也画不出数据 |
+## 横屏，刚刚好
 
-网页默认去连局域网进度服务 `http://192.168.0.100:8766/api/progress`。它返回 `{"progress":[5小时, 7天, Cursor],"simulation":false}`，不带 CORS 头。开发时浏览器走 Vite 反代的同源 `/api/progress`。伴侣服务是另一条路：`http://localhost:8000/api/dashboard`。网页两种格式都能认；原生工程只认 `subscriptions`，而且默认地址写死成 `http://192.168.0.100:8000/api/dashboard`。
+不必把平板拿起来翻用量页面。电脑上的服务取回自己的账号额度，屏幕上只留下三个已使用百分比；时钟和天气一起常亮。
 
-小智面板里的聆听、打断、亮度切换是页面内的定时模拟，没有接上真实语音。
+| 一眼看清 | 随手调整 |
+| :--- | :--- |
+| **七段时钟** · 时分秒、日期和星期 | **亮度** · 100% / 120% / 85% 循环，也可在设置里拖动 |
+| **三行额度** · OpenAI 5 小时、每周、Cursor 月度 | **常亮** · 屏幕常亮，或只在充电时常亮 |
+| **状态明确** · DEMO / SIM / LIVE，断线保留上次有效值 | **小智** · 语音或快捷指令，清空、静音、打断各自独立 |
 
-## 在这台机器上运行
+## 界面一览
 
-### 网页控制台
+### 桌面 · 时钟、天气、额度在同一屏
+
+![演示状态下的完整桌面：时钟 21:14，三张配额卡分别为已用 25%、50%、75%，小智待命](docs/images/desk.png)
+
+主画面保持灰阶。三张卡从左到右是 OpenAI 5 小时、OpenAI 每周、Cursor 月度，条上的白块表示已使用比例。右上角 `DEMO` 表示本地演示；连上真实服务后变为 `LIVE`。服务返回测试数据时，卡片标为 `SIM`。
+
+### 小智 · 对话留在下半屏
+
+![小智正在回复：快捷指令「AI科技简报」，状态为语音播报](docs/images/voice.png)
+
+下半屏是对话。`开始交流` 之后才听麦克风；`停止录音` 结束这一句，`打断播报` 停掉正在说的话，文字还留着。`清空` 会同时打断并清掉这一轮。`声音` 只开关回复播报，不关麦克风。
+
+快捷指令可以直接发出去。网页里的快捷回复是界面演示；装到平板上时，对话走小智服务。
+
+### 设置 · 地址、刷新、亮度和城市
+
+![设置面板：进度服务地址、刷新间隔、演示数据、亮度、常亮和城市编号](docs/images/settings.png)
+
+进度地址、刷新间隔、演示开关、亮度、常亮和城市编号都在这一页。`测试` 只检查当前地址能不能连通。城市编号用天气接口的城市代码，改完后天气按新的城市刷新。
+
+## 数据怎么来到屏幕上
+
+```mermaid
+flowchart LR
+    O["OpenAI / Codex\n5小时 · 每周"] --> S["电脑上的服务\n取数 · 缓存"]
+    C["Cursor\n月度"] --> S
+    S -->|"局域网 HTTP · 三个百分比"| D["Fire HD\n时钟 · 天气 · 额度"]
+    M["天气接口"] -->|"城市天气"| D
+```
+
+| 屏幕上的一行 | 含义 |
+| :--- | :--- |
+| `OpenAI 5h` | 5 小时窗口已使用比例 |
+| `OpenAI 7d` | 每周窗口已使用比例 |
+| `Cursor` | 月度额度已使用比例 |
+
+屏幕认两种返回。
+
+进度服务，默认端口 8766，与 [QuotaClock](https://github.com/akechi1980/QuotaClock) 的 `progress_service` 相同：
+
+```json
+{ "progress": [25, 50, 75], "simulation": false }
+```
+
+三个数依次是上面三行的已使用百分比。`simulation: true` 时界面标为 `SIM`。
+
+伴侣服务，端口 8000，返回 `subscriptions`。每一项包含 `id`、`name`、`remaining`、`total`、`unit`、`status`。没有填写密钥时 `status` 为 `demo`。
+
+请求失败时保留上一次的数字，不用 0% 冒充新数据。
+
+> 额度来自各平台自己的接口，上游一改就可能失效。密钥放在电脑的 `server/config.json`，这个文件不进仓库。
+
+## 快速开始
+
+### 1 · 先在浏览器里看界面
 
 ```bash
 npm install --legacy-peer-deps
 npm run dev
 ```
 
-`package.json` 里的 `esbuild@^0.25` 和 Vite 8 要求的 `esbuild@^0.27` 冲突，直接 `npm install` 会失败，需要加上 `--legacy-peer-deps`。本机没有 bun。
+打开 `http://localhost:3000`。设置里可以打开「演示数据」，不连服务也能看完整布局。
 
-浏览器打开 `http://localhost:3000`，或改用这台开发机的局域网地址。页面会去拉 `http://192.168.0.100:8766/api/progress`，三张卡分别是 OpenAI 5 小时、OpenAI 7 天、Cursor 月度的已用百分比。这个服务暂时不可达时，设置里可以打开 DEMO，或改成 `http://localhost:8000/api/dashboard` 接下面的伴侣服务。
+开发时，网页把 `/api/progress` 转到进度服务。进度服务本身不带跨域头，浏览器不要直接跨域去请求它。
 
-### 伴侣服务
+### 2 · 在电脑上准备额度
+
+两条路取一条。
+
+**进度服务。** 使用 [QuotaClock](https://github.com/akechi1980/QuotaClock) 里的 `progress_service`，本机监听 `8766`。平板或网页填：
+
+```text
+http://电脑局域网IP:8766/api/progress
+```
+
+**伴侣服务。** 在本仓库启动：
 
 ```bash
 python3 server/windows_agent_server.py
@@ -52,48 +110,63 @@ python3 server/windows_agent_server.py
 
 - 仪表盘：`http://127.0.0.1:8000/api/dashboard`
 - 小智状态：`http://127.0.0.1:8000/api/xiaozhi/status`
-- 写入状态：`POST /api/xiaozhi/event`
 
-真实密钥放在 `server/config.json`（参考 `server/config.example.json`），不要放进平板。未填写的平台保持演示数据。DeepSeek、Cursor、OpenAI、硅基流动会按配置去拉官方接口，结果缓存约 5 分钟。
+真实密钥写在 `server/config.json`，字段对照 `server/config.example.json`。
 
-### 原生 APK
+| 字段 | 填写内容 |
+| :--- | :--- |
+| `deepseek_api_key` | DeepSeek 密钥 |
+| `openai_api_key` | OpenAI 密钥 |
+| `siliconflow_api_key` | 硅基流动密钥 |
+| `cursor_session_token` | `WorkosCursorSessionToken` 的原始值 |
 
-现在还跑不起来，缺这几样：
+`config.json` 已被忽略。空着的平台继续显示演示数据，结果大约缓存 5 分钟。
 
-- `android/` 里没有 `gradlew`，`build_apk.sh` 无法执行
-- `android/local.properties` 写成了 `/opt/android-sdk`，本机 SDK 在 `~/Android/Sdk`
-- `compileSdk 33`，已安装的平台从 34 起，没有 `android-33`
-- `MainActivity` 的时钟、天气、配额、电量刷新函数仍是空实现
-- 平板 ADB 未打开，USB 只有 MTP
+### 3 · 让平板连上电脑
 
-要装到真机，先在平板上打开 ADB：设置 → 设备选项 → 连点序列号 → 开发者选项 → 启用 ADB，授权这台电脑。启用后用 SDK 里的 adb，而不是 `/usr/bin/adb`：
+在平板设置里填写电脑的局域网地址，不要填 `localhost`。保存后先拉一次，再按所选间隔刷新。
 
-```bash
-export PATH="$HOME/Android/Sdk/platform-tools:$PATH"
-adb devices
-```
+网页和原生界面都认 `progress` 数组，也都认 `subscriptions`。
 
-## 配额数据
+<details>
+<summary>连不上时先看这几项</summary>
 
-网页认两种返回。
+- 电脑上的服务还在不在：进度服务看 `/health`，伴侣服务看 `/api/dashboard`。进程活着不等于上游账号已经认证成功。
+- 返回是不是 200，以及 `simulation` 是否符合预期。
+- 平板和电脑是否在同一局域网，IP 有没有变，防火墙是否放行。这个项目不会改防火墙。
+- 密钥是否过期。失败时旧数字会留着，所以屏幕上还有数，不代表刚刚更新成功。
 
-进度服务（默认，`http://192.168.0.100:8766/api/progress`，另有 `GET /health`）：
+</details>
 
-```json
-{ "progress": [44, 7, 18], "simulation": false }
-```
+### 装到 Fire HD
 
-三个数依次是 OpenAI 5 小时已用百分比、OpenAI 7 天已用百分比、Cursor 月度已用百分比。
+原生工程在 `android/`，包名 `com.aidesk.dashboard`。用 Android Studio 打开这个目录编译。`local.properties` 不进仓库，在本机写成自己的 SDK 路径。调试包名是 `com.aidesk.dashboard.debug`。
 
-伴侣服务（端口 8000）返回 `subscriptions` 数组，每项含 `id`、`name`、`remaining`、`total`、`unit`、`status`。没有密钥时 `status` 为 `demo`。
-
-## 真机常亮
-
-原生界面里已经加了 `FLAG_KEEP_SCREEN_ON`。ADB 可用之后，还可以在系统侧放开休眠：
+平板上打开 ADB：设置 → 设备选项 → 连点序列号，直到出现开发者选项 → 启用 ADB。安装后如需系统侧常亮：
 
 ```bash
 adb shell settings put global stay_on_while_plugged_in 3
 adb shell settings put system screen_off_timeout 2147483647
 ```
 
-`dumpsys deviceidle whitelist` 是 Android 6 以后的 Doze 接口。这台是 API 28，命令可以用；2017 款的 Fire OS 5 没有这套 Doze。
+## 目录
+
+```text
+.
+├─ src/                         网页桌面：时钟、天气、额度、小智
+├─ server/windows_agent_server.py  伴侣服务，端口 8000
+├─ server/config.example.json   密钥字段模板，不含真实密钥
+├─ android/                     Fire HD 原生界面
+├─ docs/images/                 本页配图，演示数据
+└─ public/fonts/                界面用的等宽字体
+```
+
+## 使用注意
+
+- **只放在可信局域网。** 页面和伴侣服务都没有登录。不要把端口转到公网。
+- 仓库里没有真实密钥、会话令牌或设备身份。配图是演示数据。
+- `server/config.json`、`android/local.properties`、密钥库和构建产物都不提交。
+
+---
+
+AI Desk · 一眼时间，一眼额度。
